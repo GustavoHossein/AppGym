@@ -75,7 +75,7 @@ class WorkoutDetailViewController: UIViewController {
         }
             
         // Armazenar os dados de progresso UserDefaults
-        let progressData = ["series": series, "reps": reps, "weight": weight]
+        let progressData = ["series": series, "reps": reps, "weight": weight, "date": Date().description]
         
         var workoutProgress = UserDefaults.standard.array(forKey: "workoutProgress") as? [[String: String]] ?? []
         workoutProgress.append(progressData)
