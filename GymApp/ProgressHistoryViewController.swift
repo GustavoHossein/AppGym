@@ -10,7 +10,9 @@ import UIKit
 class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     private let tableView = UITableView()
+    private let filterLabel = UILabel() // Indicador de filtros ativos
     private var workoutProgress = [[String: String]]()
+    private var allWorkoutProgress = [[String: String]]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +22,13 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Filtro", style: .plain, target: self, action: #selector(showFilterOptions))
         
+        filterLabel.translatesAutoresizingMaskIntoConstraints = false
+        filterLabel.textColor = .gray
+        filterLabel.font = UIFont.systemFont(ofSize: 14)
+        filterLabel.text = "Nenhum filtro ativo"
+        
+        view.addSubview(filterLabel)
+        
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "progressCell")
@@ -28,7 +37,10 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            filterLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            filterLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            
+            tableView.topAnchor.constraint(equalTo: filterLabel.bottomAnchor, constant: 10),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -48,10 +60,15 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
             self?.filterByDate()
         }
         
+        let removeFiltersAction = UIAlertAction(title: "Remover Filtros", style: .destructive) { [weak self] _ in
+            self?.removeFilters()
+        }
+        
         let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel, handler: nil)
         
         alert.addAction(filterByWorkoutAction)
         alert.addAction(filterByDateAction)
+        alert.addAction(removeFiltersAction)
         alert.addAction(cancelAction)
 
         present(alert, animated: true, completion: nil)
@@ -64,7 +81,7 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         }
         let filterAction = UIAlertAction(title: "Filtrar", style: .default) { [weak self] _ in
             if let workoutName = alert.textFields?.first?.text, !workoutName.isEmpty {
-                self?.applyWorkoutFilter(workoutName)
+                self?.applyFilters(workoutName: workoutName)
             }
         }
         
@@ -77,40 +94,61 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
     }
     
     @objc private func filterByDate() {
-        let alert = UIAlertController(title: "Filtrar por Data", message: nil, preferredStyle: .alert)
-        alert.addTextField { textField in
-            textField.placeholder = "Digite a data (AAAA-MM-DD)"
+        let dateFilterVC = DateFilterViewController()
+        dateFilterVC.onDateSelected = { [weak self] selectedDate in
+            self?.applyFilters(dateString: selectedDate)
         }
-        
-        let filterAction = UIAlertAction(title: "Filtrar", style: .default) { [weak self] _ in
-            if let dateString = alert.textFields?.first?.text, !dateString.isEmpty {
-                self?.applyDateFilter(dateString)
-            }
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel, handler: nil)
-        
-        alert.addAction(filterAction)
-        alert.addAction(cancelAction)
-        
-        present(alert, animated: true, completion: nil)
+        navigationController?.pushViewController(dateFilterVC, animated: true)
+    }
+    
+    private func removeFilters() {
+        workoutProgress = allWorkoutProgress
+        filterLabel.text = "Nenhum filtro ativo"
+        tableView.reloadData()
     }
     
     private func loadProgressData() {
-        workoutProgress = UserDefaults.standard.array(forKey: "workoutProgress") as? [[String: String]] ?? []
+        if let savedProgress = UserDefaults.standard.array(forKey: "workoutProgress") as? [[String: String]] {
+            allWorkoutProgress = savedProgress
+            workoutProgress = savedProgress
+        }
         tableView.reloadData()
     }
     
-    private func applyWorkoutFilter(_ workoutName: String) {
-        workoutProgress = workoutProgress.filter { $0["workout"]?.lowercased() == workoutName.lowercased() }
+    private func applyFilters(workoutName: String? = nil, dateString: String? = nil) {
+        workoutProgress = allWorkoutProgress
+        
+        if let workoutName = workoutName, !workoutName.isEmpty {
+            let formattedWorkoutName = workoutName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            workoutProgress = workoutProgress.filter {
+                $0["workout"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().contains(formattedWorkoutName) == true
+            }
+        }
+        
+        if let dateString = dateString, !dateString.isEmpty {
+            workoutProgress = workoutProgress.filter {
+                $0["date"]?.contains(dateString) == true
+            }
+        }
+        
+        updateFilterIndicator(workoutName: workoutName, dateString: dateString)
         tableView.reloadData()
+    }
+    
+    private func updateFilterIndicator(workoutName: String?, dateString: String?) {
+        var filterText = "Filtros aplicados: "
+        
+        if let workoutName = workoutName, !workoutName.isEmpty {
+            filterText += "Exercício: \(workoutName) "
+        }
+        
+        if let dateString = dateString, !dateString.isEmpty {
+            filterText += "Data: \(dateString)"
+        }
+        
+        filterLabel.text = filterText.isEmpty ? "Nenhum filtro ativo" : filterText
     }
 
-    private func applyDateFilter(_ dateString: String) {
-        workoutProgress = workoutProgress.filter { $0["date"]?.contains(dateString) == true }
-        tableView.reloadData()
-    }
-    
     // MARK: - UITableViewDataSource Methods
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
