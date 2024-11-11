@@ -56,18 +56,13 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
             self?.filterByWorkout()
         }
         
-        let filterByDateAction = UIAlertAction(title: "Filtrar por Data", style: .default) { [weak self] _ in
-            self?.filterByDate()
-        }
-        
-        let removeFiltersAction = UIAlertAction(title: "Remover Filtros", style: .destructive) { [weak self] _ in
+        let removeFiltersAction = UIAlertAction(title: "Remover Filtro", style: .destructive) { [weak self] _ in
             self?.removeFilters()
         }
         
         let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel, handler: nil)
         
         alert.addAction(filterByWorkoutAction)
-        alert.addAction(filterByDateAction)
         alert.addAction(removeFiltersAction)
         alert.addAction(cancelAction)
 
@@ -93,14 +88,6 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         present(alert, animated: true, completion: nil)
     }
     
-    @objc private func filterByDate() {
-        let dateFilterVC = DateFilterViewController()
-        dateFilterVC.onDateSelected = { [weak self] selectedDate in
-            self?.applyFilters(dateString: selectedDate)
-        }
-        navigationController?.pushViewController(dateFilterVC, animated: true)
-    }
-    
     private func removeFilters() {
         workoutProgress = allWorkoutProgress
         filterLabel.text = "Nenhum filtro ativo"
@@ -111,6 +98,7 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         if let savedProgress = UserDefaults.standard.array(forKey: "workoutProgress") as? [[String: String]] {
             allWorkoutProgress = savedProgress
             workoutProgress = savedProgress
+            
         }
         tableView.reloadData()
     }
@@ -120,21 +108,17 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         
         if let workoutName = workoutName, !workoutName.isEmpty {
             let formattedWorkoutName = workoutName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            workoutProgress = workoutProgress.filter {
-                $0["workout"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().contains(formattedWorkoutName) == true
+            workoutProgress = workoutProgress.filter { progress in
+                if let workout = progress["workout"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+                    return workout.contains(formattedWorkoutName)
+                }
+                return false
             }
         }
-        
-        if let dateString = dateString, !dateString.isEmpty {
-            workoutProgress = workoutProgress.filter {
-                $0["date"]?.contains(dateString) == true
-            }
-        }
-        
         updateFilterIndicator(workoutName: workoutName, dateString: dateString)
         tableView.reloadData()
     }
-    
+
     private func updateFilterIndicator(workoutName: String?, dateString: String?) {
         var filterText = "Filtros aplicados: "
         
@@ -142,13 +126,9 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
             filterText += "Exercício: \(workoutName) "
         }
         
-        if let dateString = dateString, !dateString.isEmpty {
-            filterText += "Data: \(dateString)"
-        }
-        
         filterLabel.text = filterText.isEmpty ? "Nenhum filtro ativo" : filterText
     }
-
+    
     // MARK: - UITableViewDataSource Methods
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -162,9 +142,30 @@ class ProgressHistoryViewController: UIViewController, UITableViewDelegate, UITa
         let series = progress["series"] ?? "0"
         let reps = progress["reps"] ?? "0"
         let weight = progress["weight"] ?? "0"
-        let date = progress["date"] ?? "Data desconhecida"
         
-        cell.textLabel?.text = "\(workoutName): \(series) séries, \(reps) reps, \(weight) kg - \(date)"
+        cell.textLabel?.text = "\(workoutName): \(series) séries, \(reps) reps, \(weight) kg"
         return cell
+    }
+    
+    // MARK: - Swipe to delete action
+
+    // Função que configura a ação de deslizar para deletar
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "Deletar") { [weak self] _, _, completionHandler in
+            // Ação de deletar o exercício
+            self?.deleteExercise(at: indexPath)
+            completionHandler(true)
+        }
+        deleteAction.backgroundColor = .red
+        let swipeActions = UISwipeActionsConfiguration(actions: [deleteAction])
+        return swipeActions
+    }
+
+    // MARK: - Remover o exercício
+
+    private func deleteExercise(at indexPath: IndexPath) {
+        workoutProgress.remove(at: indexPath.row)
+        UserDefaults.standard.set(workoutProgress, forKey: "workoutProgress")
+        tableView.deleteRows(at: [indexPath], with: .automatic)
     }
 }

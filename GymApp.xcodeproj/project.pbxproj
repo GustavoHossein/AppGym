@@ -20,7 +20,6 @@
 		48A89EB02CD1D65E0041BEC8 /* UserDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A89EAF2CD1D65E0041BEC8 /* UserDatabase.swift */; };
 		48A89EB22CD5515E0041BEC8 /* WorkoutDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A89EB12CD5515E0041BEC8 /* WorkoutDetailViewController.swift */; };
 		48A89EB42CD8F1D10041BEC8 /* ProgressHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A89EB32CD8F1D10041BEC8 /* ProgressHistoryViewController.swift */; };
-		48A89EB62CDF389C0041BEC8 /* DateFilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A89EB52CDF389C0041BEC8 /* DateFilterViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,7 +38,6 @@
 		48A89EAF2CD1D65E0041BEC8 /* UserDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDatabase.swift; sourceTree = "<group>"; };
 		48A89EB12CD5515E0041BEC8 /* WorkoutDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailViewController.swift; sourceTree = "<group>"; };
 		48A89EB32CD8F1D10041BEC8 /* ProgressHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHistoryViewController.swift; sourceTree = "<group>"; };
-		48A89EB52CDF389C0041BEC8 /* DateFilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFilterViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,7 +82,6 @@
 				480CC8602CCFA6350000916C /* WorkoutViewController.swift */,
 				48A89EB12CD5515E0041BEC8 /* WorkoutDetailViewController.swift */,
 				48A89EB32CD8F1D10041BEC8 /* ProgressHistoryViewController.swift */,
-				48A89EB52CDF389C0041BEC8 /* DateFilterViewController.swift */,
 				48A89EAD2CD1D6150041BEC8 /* User.swift */,
 				48A89EAF2CD1D65E0041BEC8 /* UserDatabase.swift */,
 			);
@@ -161,7 +158,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48A89EB62CDF389C0041BEC8 /* DateFilterViewController.swift in Sources */,
 				480CC8612CCFA6350000916C /* WorkoutViewController.swift in Sources */,
 				480CC85F2CCFA3850000916C /* HomeViewController.swift in Sources */,
 				48A89EB02CD1D65E0041BEC8 /* UserDatabase.swift in Sources */,
